@@ -1,0 +1,910 @@
+#######################
+# Input Schema
+#######################
+
+type QueryRoot {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	product(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	order(filter: OrderFilter, first: Int, offset: Int): [Order]
+	userAggregate(filter: UserFilter): UserAggregateResult
+	productAggregate(filter: ProductFilter): ProductAggregateResult
+	orderAggregate(filter: OrderFilter): OrderAggregateResult
+}
+
+interface User {
+	id: ID!
+	name: String!
+	isEnable: Boolean!
+	location: Point
+}
+
+type Driver implements User {
+	id: ID!
+	name: String!
+	isEnable: Boolean!
+	location: Point
+	lpNum: String!
+	orders(filter: OrderFilter, first: Int, offset: Int): [Order]
+	ordersAggregate(filter: OrderFilter): OrderAggregateResult
+}
+
+type Consumer implements User {
+	id: ID!
+	name: String!
+	isEnable: Boolean!
+	location: Point
+	creditCard: String!
+	orders(filter: OrderFilter, first: Int, offset: Int): [Order]
+	ordersAggregate(filter: OrderFilter): OrderAggregateResult
+}
+
+type Producer implements User {
+	id: ID!
+	name: String!
+	isEnable: Boolean!
+	location: Point
+	addr: String!
+	storeName: String!
+	tel: String!
+	products(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	orders(filter: OrderFilter, first: Int, offset: Int): [Order]
+	productsAggregate(filter: ProductFilter): ProductAggregateResult
+	ordersAggregate(filter: OrderFilter): OrderAggregateResult
+}
+
+type Product {
+	id: ID
+	name: String!
+	price: Int!
+	producer(filter: ProducerFilter): Producer!
+}
+
+type Order {
+	product(filter: ProductFilter): Product!
+	consumer(filter: ConsumerFilter): Consumer!
+	producer(filter: ProducerFilter): Producer!
+	driver(filter: DriverFilter): Driver!
+}
+
+#######################
+# Extended Definitions
+#######################
+
+"""
+The Int64 scalar type represents a signed 64‐bit numeric non‐fractional value.
+Int64 can represent values in range [-(2^63),(2^63 - 1)].
+"""
+scalar Int64
+
+"""
+The DateTime scalar type represents date and time as a string in RFC3339 format.
+For example: "1985-04-12T23:20:50.52Z" represents 20 minutes and 50.52 seconds after the 23rd hour of April 12th, 1985 in UTC.
+"""
+scalar DateTime
+
+input IntRange{
+	min: Int!
+	max: Int!
+}
+
+input FloatRange{
+	min: Float!
+	max: Float!
+}
+
+input Int64Range{
+	min: Int64!
+	max: Int64!
+}
+
+input DateTimeRange{
+	min: DateTime!
+	max: DateTime!
+}
+
+input StringRange{
+	min: String!
+	max: String!
+}
+
+enum DgraphIndex {
+	int
+	int64
+	float
+	bool
+	hash
+	exact
+	term
+	fulltext
+	trigram
+	regexp
+	year
+	month
+	day
+	hour
+	geo
+}
+
+input AuthRule {
+	and: [AuthRule]
+	or: [AuthRule]
+	not: AuthRule
+	rule: String
+}
+
+enum HTTPMethod {
+	GET
+	POST
+	PUT
+	PATCH
+	DELETE
+}
+
+enum Mode {
+	BATCH
+	SINGLE
+}
+
+input CustomHTTP {
+	url: String!
+	method: HTTPMethod!
+	body: String
+	graphql: String
+	mode: Mode
+	forwardHeaders: [String!]
+	secretHeaders: [String!]
+	introspectionHeaders: [String!]
+	skipIntrospection: Boolean
+}
+
+type Point {
+	longitude: Float!
+	latitude: Float!
+}
+
+input PointRef {
+	longitude: Float!
+	latitude: Float!
+}
+
+input NearFilter {
+	distance: Float!
+	coordinate: PointRef!
+}
+
+input PointGeoFilter {
+	near: NearFilter
+	within: WithinFilter
+}
+
+type PointList {
+	points: [Point!]!
+}
+
+input PointListRef {
+	points: [PointRef!]!
+}
+
+type Polygon {
+	coordinates: [PointList!]!
+}
+
+input PolygonRef {
+	coordinates: [PointListRef!]!
+}
+
+type MultiPolygon {
+	polygons: [Polygon!]!
+}
+
+input MultiPolygonRef {
+	polygons: [PolygonRef!]!
+}
+
+input WithinFilter {
+	polygon: PolygonRef!
+}
+
+input ContainsFilter {
+	point: PointRef
+	polygon: PolygonRef
+}
+
+input IntersectsFilter {
+	polygon: PolygonRef
+	multiPolygon: MultiPolygonRef
+}
+
+input PolygonGeoFilter {
+	near: NearFilter
+	within: WithinFilter
+	contains: ContainsFilter
+	intersects: IntersectsFilter
+}
+
+input GenerateQueryParams {
+	get: Boolean
+	query: Boolean
+	password: Boolean
+	aggregate: Boolean
+}
+
+input GenerateMutationParams {
+	add: Boolean
+	update: Boolean
+	delete: Boolean
+}
+
+directive @hasInverse(field: String!) on FIELD_DEFINITION
+directive @search(by: [DgraphIndex!]) on FIELD_DEFINITION
+directive @dgraph(type: String, pred: String) on OBJECT | INTERFACE | FIELD_DEFINITION
+directive @id on FIELD_DEFINITION
+directive @withSubscription on OBJECT | INTERFACE | FIELD_DEFINITION
+directive @secret(field: String!, pred: String) on OBJECT | INTERFACE
+directive @auth(
+	password: AuthRule
+	query: AuthRule,
+	add: AuthRule,
+	update: AuthRule,
+	delete: AuthRule) on OBJECT | INTERFACE
+directive @custom(http: CustomHTTP, dql: String) on FIELD_DEFINITION
+directive @remote on OBJECT | INTERFACE | UNION | INPUT_OBJECT | ENUM
+directive @remoteResponse(name: String) on FIELD_DEFINITION
+directive @cascade(fields: [String]) on FIELD
+directive @lambda on FIELD_DEFINITION
+directive @lambdaOnMutate(add: Boolean, update: Boolean, delete: Boolean) on OBJECT | INTERFACE
+directive @cacheControl(maxAge: Int!) on QUERY
+directive @generate(
+	query: GenerateQueryParams,
+	mutation: GenerateMutationParams,
+	subscription: Boolean) on OBJECT | INTERFACE
+
+input IntFilter {
+	eq: Int
+	in: [Int]
+	le: Int
+	lt: Int
+	ge: Int
+	gt: Int
+	between: IntRange
+}
+
+input Int64Filter {
+	eq: Int64
+	in: [Int64]
+	le: Int64
+	lt: Int64
+	ge: Int64
+	gt: Int64
+	between: Int64Range
+}
+
+input FloatFilter {
+	eq: Float
+	in: [Float]
+	le: Float
+	lt: Float
+	ge: Float
+	gt: Float
+	between: FloatRange
+}
+
+input DateTimeFilter {
+	eq: DateTime
+	in: [DateTime]
+	le: DateTime
+	lt: DateTime
+	ge: DateTime
+	gt: DateTime
+	between: DateTimeRange
+}
+
+input StringTermFilter {
+	allofterms: String
+	anyofterms: String
+}
+
+input StringRegExpFilter {
+	regexp: String
+}
+
+input StringFullTextFilter {
+	alloftext: String
+	anyoftext: String
+}
+
+input StringExactFilter {
+	eq: String
+	in: [String]
+	le: String
+	lt: String
+	ge: String
+	gt: String
+	between: StringRange
+}
+
+input StringHashFilter {
+	eq: String
+	in: [String]
+}
+
+#######################
+# Generated Types
+#######################
+
+type AddConsumerPayload {
+	consumer(filter: ConsumerFilter, order: ConsumerOrder, first: Int, offset: Int): [Consumer]
+	numUids: Int
+}
+
+type AddDriverPayload {
+	driver(filter: DriverFilter, order: DriverOrder, first: Int, offset: Int): [Driver]
+	numUids: Int
+}
+
+type AddOrderPayload {
+	order(filter: OrderFilter, first: Int, offset: Int): [Order]
+	numUids: Int
+}
+
+type AddProducerPayload {
+	producer(filter: ProducerFilter, order: ProducerOrder, first: Int, offset: Int): [Producer]
+	numUids: Int
+}
+
+type AddProductPayload {
+	product(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	numUids: Int
+}
+
+type AddQueryRootPayload {
+	queryRoot(filter: QueryRootFilter, first: Int, offset: Int): [QueryRoot]
+	numUids: Int
+}
+
+type ConsumerAggregateResult {
+	count: Int
+	nameMin: String
+	nameMax: String
+	creditCardMin: String
+	creditCardMax: String
+}
+
+type DeleteConsumerPayload {
+	consumer(filter: ConsumerFilter, order: ConsumerOrder, first: Int, offset: Int): [Consumer]
+	msg: String
+	numUids: Int
+}
+
+type DeleteDriverPayload {
+	driver(filter: DriverFilter, order: DriverOrder, first: Int, offset: Int): [Driver]
+	msg: String
+	numUids: Int
+}
+
+type DeleteOrderPayload {
+	order(filter: OrderFilter, first: Int, offset: Int): [Order]
+	msg: String
+	numUids: Int
+}
+
+type DeleteProducerPayload {
+	producer(filter: ProducerFilter, order: ProducerOrder, first: Int, offset: Int): [Producer]
+	msg: String
+	numUids: Int
+}
+
+type DeleteProductPayload {
+	product(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	msg: String
+	numUids: Int
+}
+
+type DeleteQueryRootPayload {
+	queryRoot(filter: QueryRootFilter, first: Int, offset: Int): [QueryRoot]
+	msg: String
+	numUids: Int
+}
+
+type DeleteUserPayload {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	msg: String
+	numUids: Int
+}
+
+type DriverAggregateResult {
+	count: Int
+	nameMin: String
+	nameMax: String
+	lpNumMin: String
+	lpNumMax: String
+}
+
+type OrderAggregateResult {
+	count: Int
+}
+
+type ProducerAggregateResult {
+	count: Int
+	nameMin: String
+	nameMax: String
+	addrMin: String
+	addrMax: String
+	storeNameMin: String
+	storeNameMax: String
+	telMin: String
+	telMax: String
+}
+
+type ProductAggregateResult {
+	count: Int
+	nameMin: String
+	nameMax: String
+	priceMin: Int
+	priceMax: Int
+	priceSum: Int
+	priceAvg: Float
+}
+
+type QueryRootAggregateResult {
+	count: Int
+}
+
+type UpdateConsumerPayload {
+	consumer(filter: ConsumerFilter, order: ConsumerOrder, first: Int, offset: Int): [Consumer]
+	numUids: Int
+}
+
+type UpdateDriverPayload {
+	driver(filter: DriverFilter, order: DriverOrder, first: Int, offset: Int): [Driver]
+	numUids: Int
+}
+
+type UpdateOrderPayload {
+	order(filter: OrderFilter, first: Int, offset: Int): [Order]
+	numUids: Int
+}
+
+type UpdateProducerPayload {
+	producer(filter: ProducerFilter, order: ProducerOrder, first: Int, offset: Int): [Producer]
+	numUids: Int
+}
+
+type UpdateProductPayload {
+	product(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	numUids: Int
+}
+
+type UpdateQueryRootPayload {
+	queryRoot(filter: QueryRootFilter, first: Int, offset: Int): [QueryRoot]
+	numUids: Int
+}
+
+type UpdateUserPayload {
+	user(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	numUids: Int
+}
+
+type UserAggregateResult {
+	count: Int
+	nameMin: String
+	nameMax: String
+}
+
+#######################
+# Generated Enums
+#######################
+
+enum ConsumerHasFilter {
+	name
+	isEnable
+	location
+	creditCard
+	orders
+}
+
+enum ConsumerOrderable {
+	name
+	creditCard
+}
+
+enum DriverHasFilter {
+	name
+	isEnable
+	location
+	lpNum
+	orders
+}
+
+enum DriverOrderable {
+	name
+	lpNum
+}
+
+enum OrderHasFilter {
+	product
+	consumer
+	producer
+	driver
+}
+
+enum ProducerHasFilter {
+	name
+	isEnable
+	location
+	addr
+	storeName
+	tel
+	products
+	orders
+}
+
+enum ProducerOrderable {
+	name
+	addr
+	storeName
+	tel
+}
+
+enum ProductHasFilter {
+	name
+	price
+	producer
+}
+
+enum ProductOrderable {
+	name
+	price
+}
+
+enum QueryRootHasFilter {
+	user
+	product
+	order
+}
+
+enum UserHasFilter {
+	name
+	isEnable
+	location
+}
+
+enum UserOrderable {
+	name
+}
+
+#######################
+# Generated Inputs
+#######################
+
+input AddConsumerInput {
+	name: String!
+	isEnable: Boolean!
+	location: PointRef
+	creditCard: String!
+	orders: [OrderRef]
+}
+
+input AddDriverInput {
+	name: String!
+	isEnable: Boolean!
+	location: PointRef
+	lpNum: String!
+	orders: [OrderRef]
+}
+
+input AddOrderInput {
+	product: ProductRef!
+	consumer: ConsumerRef!
+	producer: ProducerRef!
+	driver: DriverRef!
+}
+
+input AddProducerInput {
+	name: String!
+	isEnable: Boolean!
+	location: PointRef
+	addr: String!
+	storeName: String!
+	tel: String!
+	products: [ProductRef]
+	orders: [OrderRef]
+}
+
+input AddProductInput {
+	name: String!
+	price: Int!
+	producer: ProducerRef!
+}
+
+input AddQueryRootInput {
+	user: [UserRef]
+	product: [ProductRef]
+	order: [OrderRef]
+}
+
+input ConsumerFilter {
+	id: [ID!]
+	has: [ConsumerHasFilter]
+	and: [ConsumerFilter]
+	or: [ConsumerFilter]
+	not: ConsumerFilter
+}
+
+input ConsumerOrder {
+	asc: ConsumerOrderable
+	desc: ConsumerOrderable
+	then: ConsumerOrder
+}
+
+input ConsumerPatch {
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	creditCard: String
+	orders: [OrderRef]
+}
+
+input ConsumerRef {
+	id: ID
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	creditCard: String
+	orders: [OrderRef]
+}
+
+input DriverFilter {
+	id: [ID!]
+	has: [DriverHasFilter]
+	and: [DriverFilter]
+	or: [DriverFilter]
+	not: DriverFilter
+}
+
+input DriverOrder {
+	asc: DriverOrderable
+	desc: DriverOrderable
+	then: DriverOrder
+}
+
+input DriverPatch {
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	lpNum: String
+	orders: [OrderRef]
+}
+
+input DriverRef {
+	id: ID
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	lpNum: String
+	orders: [OrderRef]
+}
+
+input OrderFilter {
+	has: [OrderHasFilter]
+	and: [OrderFilter]
+	or: [OrderFilter]
+	not: OrderFilter
+}
+
+input OrderPatch {
+	product: ProductRef
+	consumer: ConsumerRef
+	producer: ProducerRef
+	driver: DriverRef
+}
+
+input OrderRef {
+	product: ProductRef
+	consumer: ConsumerRef
+	producer: ProducerRef
+	driver: DriverRef
+}
+
+input ProducerFilter {
+	id: [ID!]
+	has: [ProducerHasFilter]
+	and: [ProducerFilter]
+	or: [ProducerFilter]
+	not: ProducerFilter
+}
+
+input ProducerOrder {
+	asc: ProducerOrderable
+	desc: ProducerOrderable
+	then: ProducerOrder
+}
+
+input ProducerPatch {
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	addr: String
+	storeName: String
+	tel: String
+	products: [ProductRef]
+	orders: [OrderRef]
+}
+
+input ProducerRef {
+	id: ID
+	name: String
+	isEnable: Boolean
+	location: PointRef
+	addr: String
+	storeName: String
+	tel: String
+	products: [ProductRef]
+	orders: [OrderRef]
+}
+
+input ProductFilter {
+	id: [ID!]
+	has: [ProductHasFilter]
+	and: [ProductFilter]
+	or: [ProductFilter]
+	not: ProductFilter
+}
+
+input ProductOrder {
+	asc: ProductOrderable
+	desc: ProductOrderable
+	then: ProductOrder
+}
+
+input ProductPatch {
+	name: String
+	price: Int
+	producer: ProducerRef
+}
+
+input ProductRef {
+	id: ID
+	name: String
+	price: Int
+	producer: ProducerRef
+}
+
+input QueryRootFilter {
+	has: [QueryRootHasFilter]
+	and: [QueryRootFilter]
+	or: [QueryRootFilter]
+	not: QueryRootFilter
+}
+
+input QueryRootPatch {
+	user: [UserRef]
+	product: [ProductRef]
+	order: [OrderRef]
+}
+
+input QueryRootRef {
+	user: [UserRef]
+	product: [ProductRef]
+	order: [OrderRef]
+}
+
+input UpdateConsumerInput {
+	filter: ConsumerFilter!
+	set: ConsumerPatch
+	remove: ConsumerPatch
+}
+
+input UpdateDriverInput {
+	filter: DriverFilter!
+	set: DriverPatch
+	remove: DriverPatch
+}
+
+input UpdateOrderInput {
+	filter: OrderFilter!
+	set: OrderPatch
+	remove: OrderPatch
+}
+
+input UpdateProducerInput {
+	filter: ProducerFilter!
+	set: ProducerPatch
+	remove: ProducerPatch
+}
+
+input UpdateProductInput {
+	filter: ProductFilter!
+	set: ProductPatch
+	remove: ProductPatch
+}
+
+input UpdateQueryRootInput {
+	filter: QueryRootFilter!
+	set: QueryRootPatch
+	remove: QueryRootPatch
+}
+
+input UpdateUserInput {
+	filter: UserFilter!
+	set: UserPatch
+	remove: UserPatch
+}
+
+input UserFilter {
+	id: [ID!]
+	has: [UserHasFilter]
+	and: [UserFilter]
+	or: [UserFilter]
+	not: UserFilter
+}
+
+input UserOrder {
+	asc: UserOrderable
+	desc: UserOrderable
+	then: UserOrder
+}
+
+input UserPatch {
+	name: String
+	isEnable: Boolean
+	location: PointRef
+}
+
+input UserRef {
+	id: ID!
+}
+
+#######################
+# Generated Query
+#######################
+
+type Query {
+	queryQueryRoot(filter: QueryRootFilter, first: Int, offset: Int): [QueryRoot]
+	aggregateQueryRoot(filter: QueryRootFilter): QueryRootAggregateResult
+	getUser(id: ID!): User
+	queryUser(filter: UserFilter, order: UserOrder, first: Int, offset: Int): [User]
+	aggregateUser(filter: UserFilter): UserAggregateResult
+	getDriver(id: ID!): Driver
+	queryDriver(filter: DriverFilter, order: DriverOrder, first: Int, offset: Int): [Driver]
+	aggregateDriver(filter: DriverFilter): DriverAggregateResult
+	getConsumer(id: ID!): Consumer
+	queryConsumer(filter: ConsumerFilter, order: ConsumerOrder, first: Int, offset: Int): [Consumer]
+	aggregateConsumer(filter: ConsumerFilter): ConsumerAggregateResult
+	getProducer(id: ID!): Producer
+	queryProducer(filter: ProducerFilter, order: ProducerOrder, first: Int, offset: Int): [Producer]
+	aggregateProducer(filter: ProducerFilter): ProducerAggregateResult
+	getProduct(id: ID!): Product
+	queryProduct(filter: ProductFilter, order: ProductOrder, first: Int, offset: Int): [Product]
+	aggregateProduct(filter: ProductFilter): ProductAggregateResult
+	queryOrder(filter: OrderFilter, first: Int, offset: Int): [Order]
+	aggregateOrder(filter: OrderFilter): OrderAggregateResult
+}
+
+#######################
+# Generated Mutations
+#######################
+
+type Mutation {
+	addQueryRoot(input: [AddQueryRootInput!]!): AddQueryRootPayload
+	updateQueryRoot(input: UpdateQueryRootInput!): UpdateQueryRootPayload
+	deleteQueryRoot(filter: QueryRootFilter!): DeleteQueryRootPayload
+	updateUser(input: UpdateUserInput!): UpdateUserPayload
+	deleteUser(filter: UserFilter!): DeleteUserPayload
+	addDriver(input: [AddDriverInput!]!): AddDriverPayload
+	updateDriver(input: UpdateDriverInput!): UpdateDriverPayload
+	deleteDriver(filter: DriverFilter!): DeleteDriverPayload
+	addConsumer(input: [AddConsumerInput!]!): AddConsumerPayload
+	updateConsumer(input: UpdateConsumerInput!): UpdateConsumerPayload
+	deleteConsumer(filter: ConsumerFilter!): DeleteConsumerPayload
+	addProducer(input: [AddProducerInput!]!): AddProducerPayload
+	updateProducer(input: UpdateProducerInput!): UpdateProducerPayload
+	deleteProducer(filter: ProducerFilter!): DeleteProducerPayload
+	addProduct(input: [AddProductInput!]!): AddProductPayload
+	updateProduct(input: UpdateProductInput!): UpdateProductPayload
+	deleteProduct(filter: ProductFilter!): DeleteProductPayload
+	addOrder(input: [AddOrderInput!]!): AddOrderPayload
+	updateOrder(input: UpdateOrderInput!): UpdateOrderPayload
+	deleteOrder(filter: OrderFilter!): DeleteOrderPayload
+}
+

@@ -1,0 +1,45 @@
+type QueryRoot {
+  user: [User]
+  product: [Product]
+  order: [Order]
+}
+
+interface User {
+  id: ID!
+  name: String!
+  isEnable: Boolean!
+  location: Point
+}
+
+type Driver implements User {
+	lpNum: String!
+  orders: [Order]
+}
+
+type Consumer implements User {
+	creditCard: String!
+  orders: [Order]
+}
+
+type Producer implements User {
+	addr: String!
+  storeName: String!
+  tel: String!
+  
+  products: [Product]
+  orders: [Order]
+}
+
+type Product {
+  id: ID
+  name: String!
+  price: Int!
+  producer: Producer!
+}
+
+type Order {
+  product: Product!
+  consumer: Consumer!
+  producer: Producer!
+  driver: Driver!
+}
