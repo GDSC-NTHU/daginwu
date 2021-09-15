@@ -3,7 +3,7 @@ I am a programmer, specialising in the SaaS Application Development & Distribute
 
 I'm currently employed as DSC Lead at Google DSC. I'm hands on in all stages of the SaaS Application Develop teaching in Google DSC NTHU (use Kubernetes, Go, NewSQL, Graph Database, Wide-Column Databse, Distributed File System, Alma Linux, from planning and design to testing and deployment)
 
-I'm also employed as Researcher Consulting at Brobridge. I'm developing NewSQL Database System by using Calvin Architecture (ACID Strict Serializability Level Transaction, HA, Scale out, High Throughput, Distributed ).
+I'm also employed as Researcher Consulting at Brobridge. I'm developing NewSQL Database System by using Calvin/SLOG NewSQL Architecture (ACID Strict Serializability Level Transaction, HA, Scale out, High Throughput, Distributed ).
 
 ## Personal Taste
 ### Service Type
