@@ -11,6 +11,9 @@ I'm also employed as Researcher Consulting at Brobridge. I'm developing NewSQL D
   - [Google's Open-Source Auth Service](https://www.ory.sh/keto/)
   - [Grafana k6 Loading Test Tool](https://github.com/grafana/k6)
 - PaaS
+  - Kubernetes
+  - [Velero Kubernetes PV Backup](https://github.com/vmware-tanzu/velero)    
 - IaaS
+  - Linode
 ### Function Type
 
