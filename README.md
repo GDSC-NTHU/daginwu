@@ -17,3 +17,6 @@ I'm also employed as Researcher Consulting at Brobridge. I'm developing NewSQL D
   - Linode
 ### SaaS Design White-Paper
 
+## Interested Project
+- [Snowpack](https://www.snowpack.dev/)
+
